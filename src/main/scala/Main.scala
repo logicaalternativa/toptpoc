@@ -1,7 +1,18 @@
 
 // https://github.com/samdjstevens/java-totp
 
+
+import dev.samstevens.totp.code._
+
 case class Secret( value: String) extends AnyVal
+case class Digits( value: Int) extends AnyVal
+case class Period( value: Int) extends AnyVal
+
+val hashingAlgorithm = HashingAlgorithm.SHA512
+val digits = Digits(5)
+val period = Period(30)
+
+
 
 @main def generationQR: Unit = {
     
@@ -30,7 +41,6 @@ case class Secret( value: String) extends AnyVal
     
 }
 
-
 def generateSecret : Secret = 
     import dev.samstevens.totp.secret.DefaultSecretGenerator
     Secret( ( new DefaultSecretGenerator() ).generate() )
@@ -43,9 +53,9 @@ def generateQr( secret: Secret ) : String =
                .label("example@example.com")
                .secret(secret.value)
                .issuer("AppName")
-               .algorithm(HashingAlgorithm.SHA1) 
-               .digits(6)
-               .period(30)
+               .algorithm(hashingAlgorithm) 
+               .digits(digits.value)
+               .period(period.value)
                .build();
     val generator = new ZxingPngQrGenerator();
     val imageData = generator.generate(data)
@@ -70,13 +80,12 @@ def writeFile( qrCode: String ): Unit =
 def validateCode( secret: Secret, code: String ) : Boolean = 
     
     import dev.samstevens.totp.time._
-    import  dev.samstevens.totp.code._
     
     val timeProvider = new SystemTimeProvider() 
-    val codeGenerator = new DefaultCodeGenerator()
+    val codeGenerator = new DefaultCodeGenerator(hashingAlgorithm, digits.value)
     val verifier = new DefaultCodeVerifier(codeGenerator, timeProvider)
     
-    val currentBucket = Math.floorDiv(timeProvider.getTime(), 30);
+    val currentBucket = Math.floorDiv(timeProvider.getTime(), period.value);
     
     println(s" ---> Generating code from library -> ${codeGenerator.generate( secret.value, currentBucket )}")
 
