@@ -9,7 +9,7 @@ case class Digits( value: Int) extends AnyVal
 case class Period( value: Int) extends AnyVal
 
 val hashingAlgorithm = HashingAlgorithm.SHA512
-val digits = Digits(5)
+val digits = Digits(6)
 val period = Period(30)
 
 
@@ -57,6 +57,7 @@ def generateQr( secret: Secret ) : String =
                .digits(digits.value)
                .period(period.value)
                .build();
+    val uri = data.getUri()
     val generator = new ZxingPngQrGenerator();
     val imageData = generator.generate(data)
     val mimeType = generator.getImageMimeType();
@@ -66,6 +67,9 @@ def generateQr( secret: Secret ) : String =
     |   <body>
     |    <h1>Scan your secret!!!!</h1>
     |    <img src="${getDataUriForImage(imageData, mimeType)}" />
+    |    <div>
+    |        <a href="${uri}">$uri<a>
+    |    </div>
     |   </body>
     | </html>
     """.stripMargin
@@ -89,7 +93,4 @@ def validateCode( secret: Secret, code: String ) : Boolean =
     
     println(s" ---> Generating code from library -> ${codeGenerator.generate( secret.value, currentBucket )}")
 
-    verifier.isValidCode(secret.value, code)   
-
-
-
+    verifier.isValidCode(secret.value, code) 
